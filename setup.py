@@ -1,205 +1,150 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-import socket
-import urllib2
+import datetime
 import time
 import random
+
+import requests
+
+from plan_model import *
+
 import send
-from Model import *
+
 from bs4 import BeautifulSoup
 import sys
-from selenium import webdriver
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 sys.setrecursionlimit(1000000)
 
-JINFU_URL = "https://www.ysfas.com/finance.do"
+QUERY_INTERVAL = [5,10] #监控每两次请求的间隔时间，在这个范围内取值
 
-BASE_SECOND = 1 #间隔时间
-RANDOM_SECOND = 5 #间隔时间加的随机数的最大值
+LONG_SLEEP = 60*30 #监控到了后，过多长时间再次开始监控
 
-TIMEOUT = 60 #请求超时时长
+count = 1 #监控计数
 
-count = 1
+def now_time():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+def plan_model_with_li(li):
+    liText = li.text.replace('\t', '');
 
-def check_youxuanbiao(soup):
-    print "出借专区的数据:"
+    planModel = PlanModel();
 
-    for item in soup.find_all('div',class_='fml_inve_main fml_hide'):
-        print item
-    pass
+    # 去除空行元素
+    itemArr = []
+    for item in liText.split('\n'):
+        if item == "":
+            continue
+        itemArr.append(item)
 
-    return
+    #是否是 每万元复利收益
+    fuli = False
+    if "每万元复利收益" in liText:
+        fuli = True
+    planModel.fuli = fuli
 
+    # 进度
+    progress = itemArr[2]
+    progress = progress.replace('%', '')
+    planModel.progress = float(progress)
 
-    youxuanbiao_list = [MoneyModel(), MoneyModel(), MoneyModel(),MoneyModel()]
+    # 年化利率
+    lilv = itemArr[5]
+    lilv = lilv.replace('%', '')
+    planModel.lilv = float(lilv)
 
-    youxuanbiao_lilv_list = [] #利率
-    youxuanbiao_date_length_list =[] #投资期限
-    youxuanbiao_process_list = [] #投资的进度
-    youxuanbiao_shouyi_value_list = [] #每万元收益金额
-    youxuanbiao_shouyi_type_list = [] #收益的类型
+    # 借款期限
+    jiekuanqixian = itemArr[7]
+    planModel.jiekuanqixian = jiekuanqixian
 
-    for k in soup.find_all('div', class_='area_li_divcen h90'):
-        # print k.text
-        klist = k.find_all('p',class_='textc fonts20 co_595959')
-        for j in klist:
-            date_length = j.text.encode("utf-8")
-            if "%" in date_length:
-                youxuanbiao_lilv_list.append(j.text.encode("utf-8"))
-            else:
-                youxuanbiao_date_length_list.append(date_length+"个月")
-        pass
+    # 万元收益
+    shouyi = itemArr[9]
+    shouyi = shouyi.replace('元', '')
+    planModel.shouyi = shouyi
 
-    for k in soup.find_all('div', class_='fonts14 co_595959 mb20'):
-        print k.text
-        youxuanbiao_process_list.append(k.text.encode("utf-8"))
+    # 剩余金额
+    shengyu = itemArr[11]
+    shengyu = shengyu.replace('剩余金额：', '')
+    wan = True if ("万" in shengyu) else False
+    shengyu = shengyu.replace('万', '').replace('元', '').replace(',', '')
+    shengyuMoney = float(shengyu)  # 转成数字
 
-    for k in soup.find_all('div', class_='area_li_divdown'):
-        # print k.text
-        klist = k.find_all('p',class_='shouyi')
-        for j in klist:
-            shouyi_list = j.text.strip().split('\n')
-            for k in range(len(shouyi_list)):
-                type = shouyi_list[k].encode("utf-8")
-                if "收益" in type:
-                    youxuanbiao_shouyi_type_list.append(type)
-                else:
-                    value = shouyi_list[k-1].encode("utf-8")
-                    youxuanbiao_shouyi_value_list.append(value)
-        pass
+    # 处理剩余金额的万元的情况
+    if wan:
+        shengyuMoney *= 10000
+    planModel.shengyu = shengyuMoney
 
-    #赋值优选标利率
-    for index,lilv in enumerate(youxuanbiao_lilv_list):
-        model = youxuanbiao_list[index]
-        model.lilv=lilv
-        model.type = Type.Type_youxuanbiao
-
-    #赋值优选标投资时长
-    for index,date_length in enumerate(youxuanbiao_date_length_list):
-        model = youxuanbiao_list[index]
-        model.date_length=date_length
-
-    #赋值优选标的进度
-    for index,process in enumerate(youxuanbiao_process_list):
-        model = youxuanbiao_list[index]
-        model.process=process
-
-    #赋值优选标的收益类型
-    for index,value in enumerate(youxuanbiao_shouyi_type_list):
-        model = youxuanbiao_list[index]
-        model.youxuan_type=value
-
-    #赋值优选标的收益值
-    for index,value in enumerate(youxuanbiao_shouyi_value_list):
-        model = youxuanbiao_list[index]
-        model.youxuan_shouyi=value
-
-    #检验结果
-    result = False
-    for model in youxuanbiao_list:
-        print model
-        if model.data_ok:
-            result = True
-
-    return result,youxuanbiao_list
-    pass
-
+    return planModel
 
 def deal_respose(html=""):
     if not len(html):
         print "响应无内容"
-        exit
+        send.send_jinfu_mail(mail_title="监控失败：网页无内容",mail_content="银盛金服接口请求失败")
+        exit(0)
         return
     pass
 
     soup = BeautifulSoup(html, "html5lib")
-    print soup
-    return
-    youxuanbiao_l = check_youxuanbiao(soup)
 
-    jinfujihua_l = None
-    zhuanrangzhuanqu_l = None
+    liArr = soup.find_all('li',class_='pt30 pb30')
 
-    result1 = jinfujihua_l[0]
-    result2 = youxuanbiao_l[0]
-    result3 = zhuanrangzhuanqu_l[0]
+    planModelOKArr = []
 
-    jinfujihua_list = jinfujihua_l[1]
-    youxuanbiao_list = youxuanbiao_l[1]
-    zhuanrangzhuanqu_list = zhuanrangzhuanqu_l[1]
+    for li in liArr:
+        planModel = plan_model_with_li(li)
+        if planModel.ok:
 
-    jinfujihua = "\n"
-    for model in jinfujihua_list:
-        jinfujihua = jinfujihua + str(model)+"\n"
+            planModelOKArr.append(planModel)
 
-    youxuanbiao = "\n"
-    for model in youxuanbiao_list:
-        youxuanbiao = youxuanbiao + str(model)+"\n"
+    if len(planModelOKArr)>0:
+        print "恭喜你有合格的标了"
+        content = ""
+        for model in planModelOKArr:
+            content += str(model)+"\n\n"
 
-    zhuanrangzhuanqu = "\n"
-    for model in zhuanrangzhuanqu_list:
-        zhuanrangzhuanqu = zhuanrangzhuanqu + str(model)+"\n"
+        send.send_jinfu_mail(mail_title="恭喜你监控到合格的竞标了", mail_content=content)
 
-    if result1:
-        title = "成功监控到金服计划标"
-        countstr="监控次数:"+str(count)
-        content = title+jinfujihua+countstr
-        print title,content
-        send.send_jinfu_mail(mail_title=title,mail_content=content)
-
-    if result2:
-        title = "成功监控到优选标"
-        countstr = "监控次数:" + str(count)
-        content = title + jinfujihua + countstr
-        print title,content
-        send.send_jinfu_mail(mail_title=title,mail_content=content)
-
-    if result3:
-        title = "成功监控到转让专区"
-        countstr = "监控次数:" + str(count)
-        content = title + jinfujihua + countstr
-        print title,content
-        send.send_jinfu_mail(mail_title=title,mail_content=content)
-        print
-    if result1 or result2 or result3:
-        print "监控次数:"+str(count)
-        exit(1)
-        pass
-    pass
+        #监控到后过更长时间再次启动
+        print "再次开始监控倒计时："+str(LONG_SLEEP/60)+"分"
+        time.sleep(LONG_SLEEP)
 
 
 def query_html():
-    socket.setdefaulttimeout(TIMEOUT)
+
+    url = 'https://www.ysfas.com/financeLists.do'
+
     send_headers = {
         'Host': 'www.ysfas.com',
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:57.0) Gecko/20100101 Firefox/57.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Connection': 'keep-alive',
+        'Content - Type':'application / x - www - form - urlencoded;charset = UTF - 8'
     }
     try:
-        req = urllib2.Request(JINFU_URL, headers=send_headers)
-        response = urllib2.urlopen(req)
-        html_div = response.read()
-        deal_respose(html_div)
+        response = requests.post(url, headers=send_headers)
+        deal_respose(response.text)
     except Exception, e:
-        # send.send_jinfu_mail(mail_title="接口请求失败",content="接口请求失败")
+        send.send_jinfu_mail(mail_title="监控服务请求接口失败",mail_content="接口请求失败")
+        exit(-1)
         raise e
 
-def launch(base_second=BASE_SECOND,random_second=RANDOM_SECOND):
+def launch(base_second=QUERY_INTERVAL[0],random_second=QUERY_INTERVAL[1]-QUERY_INTERVAL[0]):
+
     sleep_legth = base_second+random.randint(0,random_second)
-    print "间隔时长:",sleep_legth
+    print "倒计时："+str(sleep_legth)+"\n"
     query_html()
     time.sleep(sleep_legth)
     global count
     count=count+1
-    print "执行次数:",count
-#    launch()
+    print now_time()
+    print "监控次数："+str(count)
+    launch()
 
 def main():
-    print "拉取数据中"
+    print now_time()
+    print "开启监控中"
     launch()
     print random.randint(0,4)
 
