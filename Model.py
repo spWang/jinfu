@@ -4,8 +4,8 @@
 from enum import Enum
 
 #金服计划标准
-STANDARD_lilv = 11.5 #最低的年化利率
-STANDARD_date_length = 12 #最长的投资期限
+STANDARD_lilv = 8.5 #最低的年化利率
+STANDARD_date_length = 3 #最长的投资期限
 STANDARD_state = "立即加入"
 # STANDARD_state = "还款中"
 
@@ -112,5 +112,5 @@ class MoneyModel(object):
         pass
 
     def __str__(self):
-        return ""+' '.join([self.lilv,self.date_length,self.last_money,self.state,self.shouyi,self.process,self.youxuan_type,self.youxuan_shouyi])
+        return ""+' '.join([self.lilv,self.date_length,self.last_money,self.state,self.shouyi,self.process,self.youxuan_type,str(self.youxuan_shouyi)])
         pass

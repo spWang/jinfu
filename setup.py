@@ -9,72 +9,31 @@ import send
 from Model import *
 from bs4 import BeautifulSoup
 import sys
+from selenium import webdriver
+
 
 sys.setrecursionlimit(1000000)
 
-TIMEOUT = 60
-YINSHENGTOUZI = "https://www.ysfas.com/index.do"
+JINFU_URL = "https://www.ysfas.com/finance.do"
+
+BASE_SECOND = 1 #间隔时间
+RANDOM_SECOND = 5 #间隔时间加的随机数的最大值
+
+TIMEOUT = 60 #请求超时时长
 
 count = 1
-launch_second = 10
-launch_random = 5
 
-def check_jinfujihua(soup):
-    print "金服计划数据:"
-    jinfujihua_list = [MoneyModel(),MoneyModel(),MoneyModel()]
-
-    jinfujihua_lilv_list = [] #金服计划的利率
-    jinfujihua_date_length_list =[] #金服计划的投资期限
-    jinfujihua_state_list = [] #投资的状态
-
-    for k in soup.find_all('div', class_='nbs3-div'):
-        # print k.text
-        klist = k.find_all('h3',class_='pt15')
-        for j in klist:
-            if "%" in j.text:
-                jinfujihua_lilv_list.append(j.text.encode("utf-8"))
-                pass
-
-            date_length = j.text.encode("utf-8")
-            if "个月" in date_length:
-                jinfujihua_date_length_list.append(date_length)
-                pass
-            pass
-
-    for k in soup.find_all("div", class_="textc mt15"):
-        klist = k.find_all('a', class_='nbs2-btn')
-        for j in klist:
-            jinfujihua_state_list.append(j.text.encode("utf-8"))
-
-    #赋值金服计划的利率
-    for index,lilv in enumerate(jinfujihua_lilv_list):
-        model = jinfujihua_list[index]
-        model.lilv=lilv
-        model.type = Type.Type_jinfujihua
-
-    # 赋值金服计划的投资时长
-    for index, date_length in enumerate(jinfujihua_date_length_list):
-        model = jinfujihua_list[index]
-        model.date_length = date_length
-
-    #赋值金服计划的投资状态
-    for index, state in enumerate(jinfujihua_state_list):
-        # print index, state
-        model = jinfujihua_list[index]
-        model.state = state
-
-    #检验结果
-    result = False
-    for model in jinfujihua_list:
-        print model
-        if model.data_ok:
-            result = True
-
-    return result,jinfujihua_list
-    pass
 
 def check_youxuanbiao(soup):
-    print "优选标数据:"
+    print "出借专区的数据:"
+
+    for item in soup.find_all('div',class_='fml_inve_main fml_hide'):
+        print item
+    pass
+
+    return
+
+
     youxuanbiao_list = [MoneyModel(), MoneyModel(), MoneyModel(),MoneyModel()]
 
     youxuanbiao_lilv_list = [] #利率
@@ -148,68 +107,21 @@ def check_youxuanbiao(soup):
     return result,youxuanbiao_list
     pass
 
-def check_zhuanrangzhuanqu(soup):
-    print "转让专区数据:"
-    zhuanrangzhuanqu_list = [MoneyModel(), MoneyModel(), MoneyModel()]
-    zhuanrangzhuanqu_lilv_list = [] #利率
-    zhuanrangzhuanqu_date_length_list =[] #投资期限
-    zhuanrangzhuanqu_process_list = [] #投资的进度
-
-    for k in soup.find_all('div', class_='fl ul-lidiv w150'):
-        # print k.text
-        klist = k.find_all('p',class_=' fonts20 co_595959')
-        for j in klist:
-            textstr = j.text.encode("utf-8")
-            if "%" in textstr:
-                zhuanrangzhuanqu_lilv_list.append(textstr)
-            if not "%" in textstr and float(textstr)<48:
-                zhuanrangzhuanqu_date_length_list.append(textstr+"个月")
-        pass
-
-    for k in soup.find_all('div', class_='fl ul-lidiv w280'):
-        # print k.text
-        klist = k.find_all('div', class_='fonts14 co_595959')
-        for j in klist:
-            # print j.text
-            zhuanrangzhuanqu_process_list.append(j.text.encode("utf-8"))
-
-    #赋值转让专区利率
-    for index,lilv in enumerate(zhuanrangzhuanqu_lilv_list):
-        model = zhuanrangzhuanqu_list[index]
-        model.lilv=lilv
-        model.youxuan = True
-        model.type = Type.Type_zhuanrangzhuanqu
-
-    #赋值转让专区投资时长
-    for index,date_length in enumerate(zhuanrangzhuanqu_date_length_list):
-        model = zhuanrangzhuanqu_list[index]
-        model.date_length=date_length
-
-    #赋值转让专区的进度
-    for index,process in enumerate(zhuanrangzhuanqu_process_list):
-        model = zhuanrangzhuanqu_list[index]
-        model.process=process
-
-    #检验结果
-    result = False
-    for model in zhuanrangzhuanqu_list:
-        print model
-        if model.data_ok:
-            result = True
-
-    return result,zhuanrangzhuanqu_list
-    pass
 
 def deal_respose(html=""):
     if not len(html):
         print "响应无内容"
+        exit
         return
     pass
-    soup = BeautifulSoup(html)
 
-    jinfujihua_l = check_jinfujihua(soup)
+    soup = BeautifulSoup(html, "html5lib")
+    print soup
+    return
     youxuanbiao_l = check_youxuanbiao(soup)
-    zhuanrangzhuanqu_l = check_zhuanrangzhuanqu(soup)
+
+    jinfujihua_l = None
+    zhuanrangzhuanqu_l = None
 
     result1 = jinfujihua_l[0]
     result2 = youxuanbiao_l[0]
@@ -259,7 +171,7 @@ def deal_respose(html=""):
     pass
 
 
-def fetch_data():
+def query_html():
     socket.setdefaulttimeout(TIMEOUT)
     send_headers = {
         'Host': 'www.ysfas.com',
@@ -268,33 +180,28 @@ def fetch_data():
         'Connection': 'keep-alive',
     }
     try:
-        req = urllib2.Request(YINSHENGTOUZI, headers=send_headers)
+        req = urllib2.Request(JINFU_URL, headers=send_headers)
         response = urllib2.urlopen(req)
-        html = response.read()
-        deal_respose(html)
+        html_div = response.read()
+        deal_respose(html_div)
     except Exception, e:
-        send.send_jinfu_mail(mail_title="接口请求失败",content="接口请求失败")
-        # raise e
+        # send.send_jinfu_mail(mail_title="接口请求失败",content="接口请求失败")
+        raise e
 
-    pass
-
-def launch(second=launch_second,random_length=launch_random):
-    sleep_legth = second+random.randint(0,random_length)
+def launch(base_second=BASE_SECOND,random_second=RANDOM_SECOND):
+    sleep_legth = base_second+random.randint(0,random_second)
     print "间隔时长:",sleep_legth
-    fetch_data()
+    query_html()
     time.sleep(sleep_legth)
     global count
     count=count+1
     print "执行次数:",count
-    launch()
-
-    pass
+#    launch()
 
 def main():
     print "拉取数据中"
-    launch(launch_second,launch_random)
-    # print random.randint(0,4)
-    pass
+    launch()
+    print random.randint(0,4)
 
 
 if __name__ == '__main__':
