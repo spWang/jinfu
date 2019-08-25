@@ -3,6 +3,7 @@
 import datetime
 import time
 import random
+import threading
 
 import requests
 
@@ -23,6 +24,32 @@ QUERY_INTERVAL = [5,10] #监控每两次请求的间隔时间，在这个范围�
 LONG_SLEEP = 60*30 #监控到了后，过多长时间再次开始监控
 
 count = 1 #监控计数
+
+can_launch = True
+
+LONG_SLEEP_SUCCESS = 60*30 #监控到了后，过多长时间再次开始监控
+LONG_SLEEP_FAIL = 60*5 #监控失败，过多长时间再次开始重试
+
+class Monitoring:
+    def __init__(self,lilv):
+        self.lilv = lilv
+
+    @classmethod
+    def change_lilv(cls):
+        timer_launch()
+
+    @classmethod
+    def start(cls):
+        global can_launch
+        can_launch = True
+        timer_launch()
+
+    @classmethod
+    def stop(cls):
+        timer_stop()
+
+
+
 
 def now_time():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -76,14 +103,17 @@ def plan_model_with_li(li):
         shengyuMoney *= 10000
     planModel.shengyu = shengyuMoney
 
+    print planModel
+
     return planModel
 
 def deal_respose(html=""):
     if not len(html):
         print "响应无内容"
         send.send_jinfu_mail(mail_title="监控失败：网页无内容",mail_content="银盛金服接口请求失败")
-        exit(0)
-        return
+        print "响应无内容,再次开始监控倒计时：" + str(LONG_SLEEP_FAIL / 60) + "分"
+        reStartTimer(LONG_SLEEP_FAIL)
+
     pass
 
     soup = BeautifulSoup(html, "html5lib")
@@ -107,8 +137,9 @@ def deal_respose(html=""):
         send.send_jinfu_mail(mail_title="恭喜你监控到合格的竞标了", mail_content=content)
 
         #监控到后过更长时间再次启动
-        print "再次开始监控倒计时："+str(LONG_SLEEP/60)+"分"
-        time.sleep(LONG_SLEEP)
+        print "再次开始监控倒计时："+str(LONG_SLEEP_SUCCESS/60)+"分"
+        reStartTimer(LONG_SLEEP_SUCCESS)
+
 
 
 def query_html():
@@ -127,29 +158,64 @@ def query_html():
         deal_respose(response.text)
     except Exception, e:
         send.send_jinfu_mail(mail_title="监控服务请求接口失败",mail_content="接口请求失败")
-        exit(-1)
-        raise e
+        print e
+        print "监控服务请求接口失败,再次开始监控倒计时：" + str(LONG_SLEEP_FAIL / 60) + "分"
+        reStartTimer(LONG_SLEEP_FAIL)
 
-def launch(base_second=QUERY_INTERVAL[0],random_second=QUERY_INTERVAL[1]-QUERY_INTERVAL[0]):
 
-    sleep_legth = base_second+random.randint(0,random_second)
-    print "倒计时："+str(sleep_legth)+"\n"
+def reStartTimer(interval):
+    timer_stop()
+    timer = threading.Timer(interval, timer_launch)
+    timer.start()
+
+def timer_stop():
+    global can_launch
+    can_launch = False
+    print "计时器已停止"
+
+def timer_launch():
+    global can_launch
+
+    if not can_launch:
+        return
+
+    min = QUERY_INTERVAL[0]
+    max =  QUERY_INTERVAL[1]
+    interval = random.randint(min,max)
+
     query_html()
-    time.sleep(sleep_legth)
+
     global count
-    count=count+1
-    print now_time()
-    print "监控次数："+str(count)
-    launch()
+    print "监控次数：" + str(count)
+    count += 1
+
+    global timer
+    timer = threading.Timer(interval, timer_launch)
+    timer.start()
+    print "下次开始还有：" + str(interval) + "秒\n"
+
+
+# def launch(base_second=QUERY_INTERVAL[0],random_second=QUERY_INTERVAL[1]-QUERY_INTERVAL[0]):
+#
+#     sleep_legth = base_second+random.randint(0,random_second)
+#     print "倒计时："+str(sleep_legth)+"\n"
+#     query_html()
+#     time.sleep(sleep_legth)
+#     global count
+#     count=count+1
+#     print now_time()
+#     print "监控次数："+str(count)
+#     launch()
 
 def main():
     print now_time()
     print "开启监控中"
-    launch()
-    print random.randint(0,4)
+    # launch()
+    # print random.randint(0,4)
+    timer_launch()
+
 
 
 if __name__ == '__main__':
     main()
-    print "正常结束"
     pass
