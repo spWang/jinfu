@@ -3,6 +3,8 @@
 
 import tkinter as tk  # 使用Tkinter前需要先导入
 import re
+
+from config import MonitoringConfig
 from setup import Monitoring
 from tkinter.messagebox import *
 
@@ -16,12 +18,30 @@ class App(tk.Tk):
         self.lilvLabel.pack()
 
         # 利率输入框
-        self.lilvEntry = tk.Entry(self)
+        defalutLilv = tk.StringVar()
+        self.lilvEntry = tk.Entry(self,textvariable=defalutLilv)
+        defalutLilv.set(MonitoringConfig().lilv)
         self.lilvEntry.bind('<Key>', printkey)
         self.lilvEntry.pack()
 
-        self.lilvConfirmBtn = tk.Button(self,text="确定",command=self.lilvConfirmBtnClick)
-        self.lilvConfirmBtn.pack()
+        #利率确定
+        # self.lilvConfirmBtn = tk.Button(self,text="确定",command=self.lilvConfirmBtnClick)
+        # self.lilvConfirmBtn.pack()
+
+        # 剩余金额提示文本
+        self.shengyuLabel = tk.Label(self, text="最低剩余金额（元）")
+        self.shengyuLabel.pack()
+
+        # 剩余金额输入框
+        defalutShengyu = tk.StringVar()
+        self.shengyuEntry = tk.Entry(self,textvariable=defalutShengyu)
+        defalutShengyu.set(MonitoringConfig().shengyu)
+        self.shengyuEntry.bind('<Key>', printkey)
+        self.shengyuEntry.pack()
+
+        # 剩余金额确定
+        self.shengyuConfirmBtn = tk.Button(self, text="确定", command=self.shengyuConfirmBtnClick)
+        self.shengyuConfirmBtn.pack()
 
 
         self.startbtn = tk.Button(self,text="启动",command=self.startbtnClick)
@@ -36,31 +56,47 @@ class App(tk.Tk):
     def startbtnClick(self):
         Monitoring.start()
 
-    def lilvConfirmBtnClick(self):
-        value = self.lilvEntry.get()
+    # def lilvConfirmBtnClick(self):
+    #     value = self.lilvEntry.get()
+    #
+    #     try:
+    #         lilv = float(value)
+    #         if lilv <0 or lilv > 100:
+    #             showinfo("错误", "必须输入0-100的数字")
+    #             return
+    #         MonitoringConfig().lilv = lilv
+    #         showinfo("成功","设置成功");
+    #     except Exception, e:
+    #         showinfo("错误",e)
 
-        # try:
-        #     lilv = float(value)
-        #     MonitoringConfig().lilv = value
-        #
-        # except Exception, e:
-        #     showerror("必须输入0-100的数字")
 
-        return
+    def shengyuConfirmBtnClick(self):
 
-        ok = True
-        if not isinstance(value, float) or not isinstance(value, int):
-            ok = False
-            print "必须是数字"
-
-        if value < 0 or value > 100:
-            print "利率范围是0到100"
-            ok = False
-        if not ok:
-            showerror(title="错误", message="必须输入0-100的数字")
+        #利率
+        lilvStr = self.lilvEntry.get()
+        try:
+            lilv = float(lilvStr)
+            if lilv < 0 or lilv > 100:
+                showinfo("错误", "必须输入0-100的数字")
+                return
+        except Exception, e:
+            showinfo("错误", e)
             return
 
-        MonitoringConfig().lilv = value
+        #剩余金额
+        shengyuStr = self.shengyuEntry.get()
+        try:
+            shengyu = float(shengyuStr)
+            if shengyu <0:
+                showinfo("错误", "必须输入大于0的数字")
+                return
+        except Exception, e:
+            showinfo("错误",e)
+            return
+
+        MonitoringConfig().lilv = lilv
+        MonitoringConfig().shengyu = shengyu
+        showinfo("成功", "设置成功");
 
     def printkey(self, event):
         print('你按下了: ' + event.char)

@@ -1,10 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-STANDARD_LILV = 9 #年化利率高于多少时通知我
-STANDARD_SHENGYU = 10000 #高于多少剩余金额时通知我
-
+from config import MonitoringConfig
 
 class PlanModel(object):
 
@@ -29,9 +26,16 @@ class PlanModel(object):
         if self.fuli:
             return False
 
-        lilvOK = True if (self.lilv>=STANDARD_LILV) else False
+        baseLilv = MonitoringConfig().lilv
+        print "要求利率是："+str(baseLilv)
+
+
+        baseShengyu = MonitoringConfig().shengyu
+        print "要求剩余金额是："+str(baseShengyu)
+
+        lilvOK = True if (self.lilv>=baseLilv) else False
         progressOK = True if (self.progress<100) else False
-        shenyuOK = True if (self.shengyu>STANDARD_SHENGYU) else False
+        shenyuOK = True if (self.shengyu>baseShengyu) else False
 
 
         return lilvOK and progressOK and shenyuOK

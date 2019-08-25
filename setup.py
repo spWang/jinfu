@@ -157,6 +157,7 @@ def query_html():
         response = requests.post(url, headers=send_headers)
         deal_respose(response.text)
     except Exception, e:
+        #TODO:发送异常信息
         send.send_jinfu_mail(mail_title="监控服务请求接口失败",mail_content="接口请求失败")
         print e
         print "监控服务请求接口失败,再次开始监控倒计时：" + str(LONG_SLEEP_FAIL / 60) + "分"
