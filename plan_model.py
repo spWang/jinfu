@@ -47,6 +47,9 @@ class PlanModel(object):
         if shengyu>10000:
             shengyu/=10000
             unit = "万元"
+        shouyiText = '每万元收益'
+        if self.fuli:
+            shouyiText = "每万元复利收益"
 
-        return "进度：{progress}%\n年化利率：{lilv}%\n借款期限：{jiekuanqixian}\n每万元收益：{shouyi}元\n剩余金额：{shengyu}{unit}\n".format(progress=self.progress,lilv=self.lilv,jiekuanqixian=self.jiekuanqixian,shouyi=self.shouyi,shengyu=shengyu,unit=unit)
+        return "进度：{progress}%\n年化利率：{lilv}%\n借款期限：{jiekuanqixian}\n{shouyiText}：{shouyi}元\n剩余金额：{shengyu}{unit}\n".format(progress=self.progress,lilv=self.lilv,jiekuanqixian=self.jiekuanqixian,shouyiText=shouyiText,shouyi=self.shouyi,shengyu=shengyu,unit=unit)
         pass
