@@ -5,7 +5,7 @@ import tkinter as tk  # 使用Tkinter前需要先导入
 import re
 
 from config import MonitoringConfig
-from setup import Monitoring
+# from setup import Monitoring
 from tkinter.messagebox import *
 
 
@@ -51,10 +51,12 @@ class App(tk.Tk):
         self.stopbtn.pack()
 
     def stopbtnClick(self):
-        Monitoring.stop()
+        pass
+        # Monitoring.stop()
 
     def startbtnClick(self):
-        Monitoring.start()
+        pass
+        # Monitoring.start()
 
     # def lilvConfirmBtnClick(self):
     #     value = self.lilvEntry.get()

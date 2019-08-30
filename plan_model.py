@@ -23,15 +23,16 @@ class PlanModel(object):
 
     @property
     def ok(self):
-        if self.fuli:
-            return False
 
         baseLilv = MonitoringConfig().lilv
-        print "要求利率是："+str(baseLilv)
+        print "目标最低利率是："+str(baseLilv)
 
 
         baseShengyu = MonitoringConfig().shengyu
-        print "要求剩余金额是："+str(baseShengyu)
+        print "目标最低剩余金额是："+str(baseShengyu)+"\n"
+
+        if self.fuli:
+            return False
 
         lilvOK = True if (self.lilv>=baseLilv) else False
         progressOK = True if (self.progress<100) else False
@@ -51,5 +52,5 @@ class PlanModel(object):
         if self.fuli:
             shouyiText = "每万元复利收益"
 
-        return "进度：{progress}%\n年化利率：{lilv}%\n借款期限：{jiekuanqixian}\n{shouyiText}：{shouyi}元\n剩余金额：{shengyu}{unit}\n".format(progress=self.progress,lilv=self.lilv,jiekuanqixian=self.jiekuanqixian,shouyiText=shouyiText,shouyi=self.shouyi,shengyu=shengyu,unit=unit)
+        return "进度：{progress}%\n年化利率：{lilv}%\n借款期限：{jiekuanqixian}\n{shouyiText}：{shouyi}元\n剩余金额：{shengyu}{unit}".format(progress=self.progress,lilv=self.lilv,jiekuanqixian=self.jiekuanqixian,shouyiText=shouyiText,shouyi=self.shouyi,shengyu=shengyu,unit=unit)
         pass
