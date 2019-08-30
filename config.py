@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-DEFAULT_LILV = 12
+DEFAULT_LILV = 8.5
 DEFAULT_SHENGYU = 10000
 
 def singleton(cls, *args, **kwargs):

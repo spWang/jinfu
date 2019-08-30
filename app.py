@@ -56,7 +56,7 @@ class App(tk.Tk):
         pass
 
     def startbtnClick(self):
-        self.monitoringManager.stop()
+        self.monitoringManager.stop(log=True)
         self.monitoringManager.start()
         pass
 
@@ -126,7 +126,7 @@ def main():
     return
 
     window = tk.Tk()
-    window.title('My Window')
+    window.title('监控APP')
     window.geometry('500x300')
     l = tk.Label(window, text='你好！this is Tkinter', bg='green', font=('Arial', 12), width=30, height=2)
     l.pack()

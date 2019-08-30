@@ -1,10 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import datetime
-import time
 import random
 import threading
-from collections import Callable
 
 import requests
 
@@ -21,16 +19,10 @@ sys.setdefaultencoding('utf8')
 
 sys.setrecursionlimit(1000000)
 
-QUERY_INTERVAL = [5,6] #监控每两次请求的间隔时间，在这个范围内取值
+QUERY_INTERVAL = [5,10] #监控每两次请求的间隔时间，在这个范围内取值
 
-LONG_SLEEP = 60*30 #监控到了后，过多长时间再次开始监控
-
-count = 1 #监控计数
-
-can_launch = True
-
-LONG_SLEEP_SUCCESS = 10 #监控到了后，过多长时间再次开始监控
-LONG_SLEEP_FAIL = 15 #监控失败，过多长时间再次开始重试
+LONG_SLEEP_SUCCESS = 60*60 #监控到了后，过多长时间再次开始监控
+LONG_SLEEP_FAIL = 60*30 #监控失败，过多长时间再次开始重试
 
 def singleton(cls, *args, **kwargs):
     instances = {}
@@ -49,6 +41,7 @@ class MonitoringManager(object):
         self.timer = None
         self.num = 0 #计次
         self.didStart = False
+        self.canRequest = True
         pass
 
 
@@ -76,6 +69,7 @@ class MonitoringManager(object):
         self.timer = threading.Timer(interval, self._sendRequest)
         self.timer.start()
         self.didStart = True
+        self.canRequest = True
         print "距离下次数据请求还需要："+format_seconds(interval)
         print  "\n"
 
@@ -89,13 +83,15 @@ class MonitoringManager(object):
         pass
 
     #停止监控
-    def stop(self):
+    def stop(self, log=False):
         if not self.didStart:
             return
-        print "监控服务停止"
         self.timer.cancel()
         self.timer = None
         self.didStart = False
+        self.canRequest = False
+        if log:
+            print "监控服务停止"
         pass
 
     #暂停监控xx秒
@@ -108,7 +104,8 @@ class MonitoringManager(object):
         pass
 
     def _sendRequest(self):
-        Monitoring.requestHtml()
+        if self.canRequest:
+            Monitoring.requestHtml()
         pass
     pass
 
@@ -153,7 +150,10 @@ class Monitoring(object):
 
         if len(planModelOKArr) > 0:
             print "㊗️恭喜你有合格的标了"
-            content = ""
+            config = MonitoringConfig()
+            lilv = "目标最低利率是："+str(config.lilv)+"\n"
+            shengyu = "目标最低剩余金额是："+str(config.shengyu)+"元\n\n"
+            content = lilv+shengyu
             for model in planModelOKArr:
                 content += str(model) + "\n\n"
 
