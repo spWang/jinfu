@@ -92,6 +92,7 @@ class MonitoringManager(object):
     def stop(self):
         if not self.didStart:
             return
+        print "监控服务停止"
         self.timer.cancel()
         self.timer = None
         self.didStart = False
@@ -129,7 +130,7 @@ class Monitoring(object):
             response = requests.post(url, headers=send_headers)
             Monitoring._dealResponse(response.text)
         except Exception, e:
-            Monitoring._dealError(content="监控服务请求接口失败", restartInterval=LONG_SLEEP_FAIL)
+            Monitoring._dealError(content=str(e), restartInterval=LONG_SLEEP_FAIL)
         pass
 
     @classmethod
@@ -233,7 +234,7 @@ class Monitoring(object):
 
     @classmethod
     def _sendMailAndResart(cls, title, content, restartInterval = 0):
-        #send.send_jinfu_mail(mail_title=title, mail_content=content)
+        send.send_jinfu_mail(mail_title=title, mail_content=content)
 
         if restartInterval == 0:
             print "不再重新开始计时"

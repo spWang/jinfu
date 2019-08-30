@@ -5,13 +5,14 @@ import tkinter as tk  # 使用Tkinter前需要先导入
 import re
 
 from config import MonitoringConfig
-# from setup import Monitoring
+from setup import MonitoringManager
 from tkinter.messagebox import *
 
 
 class App(tk.Tk):
     def __init__(self):
         self.window = tk.Tk.__init__(self)
+        self.monitoringManager = MonitoringManager()
 
         #利率提示文本
         self.lilvLabel = tk.Label(self,text="最低利率（%）")
@@ -51,12 +52,13 @@ class App(tk.Tk):
         self.stopbtn.pack()
 
     def stopbtnClick(self):
+        self.monitoringManager.stop()
         pass
-        # Monitoring.stop()
 
     def startbtnClick(self):
+        self.monitoringManager.stop()
+        self.monitoringManager.start()
         pass
-        # Monitoring.start()
 
     # def lilvConfirmBtnClick(self):
     #     value = self.lilvEntry.get()

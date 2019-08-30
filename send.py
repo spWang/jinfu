@@ -14,7 +14,8 @@ me_sender_pwd="abc666888"
 
 def send_jinfu_mail(mail_title="",mail_content=""):
 
-    print "邮件内容:\n"+mail_title+"\n"+mail_content
+    print "邮件标题："+mail_title
+    print "邮件内容:"+mail_content
     print "正在发送通知邮件\n"
 
     send_mail(mail_host=me_mail_host,
