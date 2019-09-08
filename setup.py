@@ -21,8 +21,8 @@ sys.setrecursionlimit(1000000)
 
 QUERY_INTERVAL = [20,30] #监控每两次请求的间隔时间，在这个范围内取值
 
-LONG_SLEEP_SUCCESS = 60*60 #监控到了后，过多长时间再次开始监控
-LONG_SLEEP_FAIL = 60*30 #监控失败，过多长时间再次开始重试
+LONG_SLEEP_SUCCESS = 60*10 #监控到了后，过多长时间再次开始监控
+LONG_SLEEP_FAIL = 60*3 #监控失败，过多长时间再次开始重试
 
 def singleton(cls, *args, **kwargs):
     instances = {}
