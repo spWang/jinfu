@@ -265,6 +265,7 @@ def now_time():
 
 def main():
     print "开启监控中"
+    Monitoring.requestHtml()
     m1 = MonitoringManager()
     m1.start()
 
