@@ -52,8 +52,8 @@ def send_mail(mail_host=me_mail_host,
         return True
     except Exception, e:
         print "通知邮件发送失败。"
-        print e.decode('unicode-escape').encode('utf-8')
-        exit(-1)
+        print e
+        #        exit(-1)
         return False
     pass
 
