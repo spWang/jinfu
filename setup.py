@@ -106,6 +106,8 @@ class MonitoringManager(object):
 
     def _sendRequest(self):
         if self.canRequest:
+            timeOK = normal_send_mail_time()
+            Monitoring.dealNormal(timeOK,"银盛监控服务持续监控中")
             Monitoring.requestHtml()
         pass
     pass
@@ -161,8 +163,6 @@ class Monitoring(object):
             Monitoring._dealSuccess(content=content, restartInterval=LONG_SLEEP_SUCCESS)
         else:
             print "没有符合要求的标"
-            timeOK = normal_send_mail_time()
-            Monitoring._dealNormal(timeOK,"银盛监控服务持续监控中")
             MonitoringManager().start()
         pass
 
@@ -236,7 +236,7 @@ class Monitoring(object):
         pass
 
     @classmethod
-    def _dealNormal(cls, timeOK, title):
+    def dealNormal(cls, timeOK, title):
         if not timeOK:
             return
         content = title +"\n发送时间:"+ now_time()
