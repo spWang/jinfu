@@ -236,10 +236,11 @@ class Monitoring(object):
         pass
 
     @classmethod
-    def _dealNormal(cls, timeOK, content):
+    def _dealNormal(cls, timeOK, title):
         if not timeOK:
             return
-        send.send_jinfu_mail(mail_title=content, mail_content=content)
+        content = title +"\n发送时间:"+ now_time()
+        send.send_jinfu_mail(mail_title=title, mail_content=content)
         pass
 
 
