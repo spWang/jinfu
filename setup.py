@@ -21,7 +21,7 @@ sys.setrecursionlimit(1000000)
 
 QUERY_INTERVAL = [20,30] #监控每两次请求的间隔时间，在这个范围内取值
 NORMAL_SEND_INTERVAL = 3 #正常监控中每次发送邮件的时间间隔
-LONG_SLEEP_SUCCESS = 60*20 #监控到了后，过多长时间再次开始监控
+LONG_SLEEP_SUCCESS = 60*30 #监控到了后，过多长时间再次开始监控
 LONG_SLEEP_FAIL = 60*5 #监控失败，过多长时间再次开始重试
 
 
@@ -239,7 +239,10 @@ class Monitoring(object):
     def dealNormal(cls, timeOK, title):
         if not timeOK:
             return
-        content = title +"\n发送时间:"+ now_time()
+        config = MonitoringConfig()
+        lilv = "\n目标最低利率是："+str(config.lilv)+"\n"
+        shengyu = "目标最低剩余金额是："+str(config.shengyu)+"元\n"
+        content = title + lilv + shengyu + "发送时间:"+ now_time()
         send.send_jinfu_mail(mail_title=title, mail_content=content)
         pass
 
@@ -283,10 +286,15 @@ def normal_send_mail_time():
     
     hourOK = int(hour)%NORMAL_SEND_INTERVAL == 0
     minuteOK = int(minute) == 0
-    secondOK = int(second)>0 and int(second)<30
+    secondOK = int(second)>0 and int(second)<40
 
     return hourOK and minuteOK and secondOK
 
+#是否是夜间
+#def is_at_night():
+#    nowHour = datetime.datetime.now().strftime('%H')
+#    return int(nowHour) >2 and int(nowHour) <7
+        
 def main():
     print "开启监控中"
     Monitoring.requestHtml()

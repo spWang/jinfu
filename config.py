@@ -5,7 +5,7 @@
 # 9.0 = 三个月
 # 9.5 = 六个月
 
-DEFAULT_LILV = 9.5
+DEFAULT_LILV = 9.4
 DEFAULT_SHENGYU = 10000
 
 def singleton(cls, *args, **kwargs):
