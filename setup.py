@@ -19,7 +19,7 @@ sys.setdefaultencoding('utf8')
 
 sys.setrecursionlimit(1000000)
 
-QUERY_INTERVAL = [20,30] #监控每两次请求的间隔时间，在这个范围内取值
+QUERY_INTERVAL = [60,120] #监控每两次请求的间隔时间，在这个范围内取值
 NORMAL_SEND_INTERVAL = 3 #正常监控中每次发送邮件的时间间隔
 LONG_SLEEP_SUCCESS = 60*30 #监控到了后，过多长时间再次开始监控
 LONG_SLEEP_FAIL = 60*5 #监控失败，过多长时间再次开始重试
